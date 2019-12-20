@@ -34,3 +34,8 @@ xlnx_auto_0_xdb/
 ipcore_dir/
 *.xise
 *.gise
+!*.v
+!src/
+core_pad.*
+core.*
+*.coe

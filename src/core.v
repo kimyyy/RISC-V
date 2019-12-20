@@ -18,31 +18,11 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
-`define OP_ITYPE 7'b0000000
-`define OP_RTYPE 7'b0000001
-`define OP_LUI   7'b0000010
-`define OP_AUIPC 7'b0000011
 
-`define ADDI 3'b000
-`define SLTI 3'b001
-`define ANDI 3'b010
-`define ORI  3'b011
-`define XORI 3`b100
-`define SLLI 3'b101
-`define SRLI 3`b110
-`define SRAI 3'b111
-
-`define ADD  3'b000
-`define SLT  3'b001
-`define SLTU 3'b010
-`define AND  3'b011
-`define OR   3'b100
-`define XOR  3'b101
-`define SLL  3'b110
-`define SRL  3'b111
 
 
 module core(clk,result);
+   `include "macro.v"
 	// input and output
 	input clk;
 	output [31:0] result;
@@ -50,19 +30,23 @@ module core(clk,result);
 	// wire
 	// program decode
 	wire [31:0] program;
-	wire ALUSrc = (program[6:0] == `OP_ITYPE);
+    wire [6:0] optype = program[6:0];
+	wire ALUSrc = (optype == `OP_ITYPE);
 	wire [4:0] rd = program[11:7];
 	wire [2:0] funct3 = program[14:12];
 	wire [4:0] rs1 = program[19:15];
 	wire [4:0] rs2 = program[24:20];
 	wire [11:0] immidiate = program[31:20];
+    wire [6:0] funct7 = program[31:25];
+    wire [19:0] jal_offset = program[31:12];
 	
-	wire writeEnable=1;
+	wire writeEnable=(optype==`OP_ITYPE || optype==`OP_RTYPE || optype==`OP_JAL);
 	wire [31:0] readData1,readData2;
-	wire [4:0] ALUOp = 0;
+	wire [2:0] ALUOp = funct3;
 	wire zero,carry;
 	wire [31:0] writeData = result;
-	wire [31:0] ALUinput2 = ALUSrc? immidiate : readData2;
+    // immidiate is sign extention
+	wire [31:0] ALUinput2 = ALUSrc? {{20{immidiate[11]}},immidiate} : readData2;
 	
 	reg [31:0] pc;
 	
@@ -73,9 +57,11 @@ module core(clk,result);
 	
 	/// always
 	always @(posedge clk) begin
-		if(pc==32'd20)
+		if(pc==`PC_LIMIT)
 			pc <= 0;
-		else
+		else if(optype==`OP_JAL)
+            pc <= pc + jal_offset <<2;
+        else
 			pc <= pc + 4;
 	end
 	
@@ -100,7 +86,9 @@ module core(clk,result);
 	ALU alu (
     .data1(readData1), 
     .data2(ALUinput2), 
+    .optype(optype),
     .ALUOp(ALUOp), 
+    .funct7(funct7),
     .result(result), 
     .zero(zero), 
     .carry(carry)
