@@ -45,23 +45,24 @@ module core(clk,result);
 	wire [2:0] ALUOp = funct3;
 	wire zero,carry;
 	wire [31:0] writeData = result;
+    wire [31:0] ALUinput1 = readData1;
     // immidiate is sign extention
 	wire [31:0] ALUinput2 = ALUSrc? {{20{immidiate[11]}},immidiate} : readData2;
 	
 	reg [31:0] pc;
 	
-	// initialize
+	// pc is 0 at start
 	initial begin
-		pc <= 0;
+		pc <= 32'd0;
 	end
 	
 	/// always
 	always @(posedge clk) begin
 		if(pc==`PC_LIMIT)
-			pc <= 0;
+			pc <= 32'd0;
 		else if(optype==`OP_JAL)
             pc <= pc + jal_offset <<2;
-        else
+      else
 			pc <= pc + 4;
 	end
 	
@@ -84,7 +85,7 @@ module core(clk,result);
     );
 
 	ALU alu (
-    .data1(readData1), 
+    .data1(ALUinput1), 
     .data2(ALUinput2), 
     .optype(optype),
     .ALUOp(ALUOp), 

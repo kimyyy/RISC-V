@@ -29,13 +29,17 @@
 `define OP_JALR   7'b1100111
 
 `define ADD_SUB  3'b000
+`define ADD  3'b000
 `define SLL  3'b001
 `define SLT  3'b010
 `define SLTU 3'b011
 `define XOR  3'b100
+`define SRL  3'b101
 `define SRL_SRA  3'b101
 `define OR   3'b110
 `define AND  3'b111
+
+
 
 `define FUNCT_SRA 6'b010000
 `define FUNCT_SRL 6'b000000
